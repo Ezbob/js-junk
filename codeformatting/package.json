@@ -1,0 +1,16 @@
+{
+  "name": "codeformatting",
+  "version": "0.1.0",
+  "description": "code formatting example",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pretty": "prettier --config \".prettierrc.json\" --write \"src/**/*.js\"",
+    "pretty-check": "prettier --check \"src/**/*.js\""
+  },
+  "author": "Anders Busch",
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "1.18.2"
+  }
+}
