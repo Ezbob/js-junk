@@ -44,10 +44,6 @@ class Entity {
   addComponent(componentInstance) {
     this.components.set(componentInstance.cid, componentInstance)
   }
-
-  get length() {
-    return this.components.size
-  }
 };
 
 class PositionComponent {
@@ -95,19 +91,13 @@ class EntitiesManager extends Array {
     return entity;
   }
 
-  getEntitiesByComponents(...componentList) {
+  getEntitiesByComponentIds(...componentList) {
     let results = [];
     for (let entity of this) {
-      if (componentList.length > entity.length) {
+      if (componentList.length > entity.components.size) {
         continue;  // entity's component list is not a superset
       }
-
-      let shouldAdd = true;
-      for (let c of componentList) {
-        shouldAdd = shouldAdd && entity.components.has(c.cid);
-      }
-
-      if (shouldAdd) {
+      if (componentList.every((c => entity.components.has(c)))) {
         results.push(entity)
       }
     }
@@ -120,8 +110,8 @@ var entities = new EntitiesManager();
 class PhysicalSystem {
   updateVelocities() {
     let dt = 1.0 / 60.0;
-    let es =
-        entities.getEntitiesByComponents(PositionComponent, VelocityComponent);
+    let es = entities.getEntitiesByComponentIds(
+        PositionComponent.cid, VelocityComponent.cid);
     for (let entity of es) {
       let pc = entity.getComponentById(PositionComponent.cid);
       let vc = entity.getComponentById(VelocityComponent.cid);
@@ -135,27 +125,37 @@ class PhysicalSystem {
 (function main() {
   let physical = new PhysicalSystem()
 
+  let getTime = () => {
+    return new Date().getTime() / 1000;
+  };
 
-  entities.newEntity(new PositionComponent(), new VelocityComponent(1, 1));
-  entities.newEntity(new PositionComponent());
-
-  console.log(
-      entities.getEntitiesByComponents(PositionComponent, VelocityComponent))
-
-  console.log(entities.getEntitiesByComponents(PositionComponent))
-
-  for (let e of entities.getEntitiesByComponents(
-           PositionComponent, VelocityComponent)) {
-    let pc = e.getComponentById(PositionComponent.cid);
-    let vc = e.getComponentById(VelocityComponent.cid);
-    console.log("components", pc, vc)
-  }
-
-
-  physical.updateVelocities();
-  for (let e of entities) {
-    console.log('->', e)
-  }
+  let nEntities = 100000;
   
-  console.log(entities.length)
+  for (let i = 0; i < nEntities; i++) {
+    entities.newEntity(new PositionComponent(), new VelocityComponent(1, 1));
+    entities.newEntity(new PositionComponent());
+  }
+
+  let minTime = 0;
+  let maxTime = 0;
+  let sumTime = 0;
+  let tries = 1000;
+
+  for (let i = 0; i < tries; i++) {
+    let timeStart = getTime();
+    physical.updateVelocities();
+    let timeEnd = getTime() - timeStart;
+    if (timeEnd < minTime) minTime = timeEnd;
+    if (timeEnd > maxTime) maxTime = timeEnd;
+    sumTime += timeEnd;
+  }
+
+  let avg = sumTime / tries;
+  console.log("--- Physical system stats ---");
+  console.log("Entities: ", nEntities, "entities");
+  console.log("Elapsed: ", sumTime, "secs");
+  console.log('Min: ', minTime, "secs");
+  console.log('Max: ', maxTime, "secs");
+  console.log('Avg: ', avg, "secs");
+
 })();
