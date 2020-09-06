@@ -105,12 +105,14 @@ class EntitiesManager extends Array {
   }
 };
 
-var entities = new EntitiesManager();
 
 class PhysicalSystem {
+  constructor(e) {
+    this.entities = e;
+  }
   updateVelocities() {
     let dt = 1.0 / 60.0;
-    let es = entities.getEntitiesByComponentIds(
+    let es = this.entities.getEntitiesByComponentIds(
         PositionComponent.cid, VelocityComponent.cid);
     for (let entity of es) {
       let pc = entity.getComponentById(PositionComponent.cid);
@@ -121,16 +123,17 @@ class PhysicalSystem {
   }
 };
 
+let entities = new EntitiesManager();
 
 (function main() {
-  let physical = new PhysicalSystem()
+  let physical = new PhysicalSystem(entities);
 
   let getTime = () => {
     return new Date().getTime() / 1000;
   };
 
-  let nEntities = 100000;
-  
+  let nEntities = 1000000;
+
   for (let i = 0; i < nEntities; i++) {
     entities.newEntity(new PositionComponent(), new VelocityComponent(1, 1));
     entities.newEntity(new PositionComponent());
