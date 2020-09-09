@@ -30,15 +30,16 @@ function printDescriptors(name, min, max, avg, sum) {
 
 
 function operationTimeTest() {
-  let sumB1Time = 0;
   let sumA1Time = 0;
   let maxA1 = 0, minA1 = 0;
-  let maxB1 = 0, minB1 = 0;
+
   let tries = 1000;
   let nEntities = 1000000;
 
   let a1 = [];
   let b1 = new VectorSOA([], []);
+  let c1 =
+      new VectorSOA(new Uint32Array(nEntities), new Uint32Array(nEntities));
 
   for (let i = 0; i < nEntities; ++i) {
     a1[i] = new VectorAOS(i + 1, i * (i / 2));
@@ -50,6 +51,14 @@ function operationTimeTest() {
 
   for (let i = 0; i < nEntities; ++i) {
     b1.ys[i] = i * (i / 2);
+  }
+
+  for (let i = 0; i < nEntities; ++i) {
+    c1.xs[i] = i + 1;
+  }
+
+  for (let i = 0; i < nEntities; ++i) {
+    c1.ys[i] = i * (i / 2);
   }
 
   let scala = 0.7
@@ -72,6 +81,8 @@ function operationTimeTest() {
     sumA1Time += endTime;
   }
 
+  let sumB1Time = 0;
+  let maxB1 = 0, minB1 = 0;
   for (let t = 0; t < tries; ++t) {
     let start = getTime();
     for (let i = 0; i < nEntities; ++i) {
@@ -93,9 +104,35 @@ function operationTimeTest() {
     sumB1Time += endTime;
   }
 
+  let sumC1Time = 0;
+  let maxC1 = 0, minC1 = 0;
+  for (let t = 0; t < tries; ++t) {
+    let start = getTime();
+    for (let i = 0; i < nEntities; ++i) {
+      c1.xs[i] *= scala;
+    }
+
+    for (let i = 0; i < nEntities; ++i) {
+      c1.ys[i] *= scala;
+    }
+    let endTime = getTime() - start;
+
+    if (endTime < minC1) {
+      minC1 = endTime
+    } else if (t === 0) {
+      minC1 = endTime
+    }
+    if (endTime > maxC1) maxC1 = endTime;
+
+    sumC1Time += endTime;
+  }
+
   printDescriptors('A1: AOS', minA1, maxA1, sumA1Time / tries, sumA1Time)
 
   printDescriptors('B1: SOA', minB1, maxB1, sumB1Time / tries, sumB1Time)
+
+  printDescriptors('C1: typed SOA', minC1, maxC1, sumC1Time / tries, sumC1Time)
+
 
   let denom = sumA1Time <= sumB1Time ? sumA1Time : sumB1Time
   let nominator = sumA1Time >= sumB1Time ? sumA1Time : sumB1Time
@@ -105,13 +142,11 @@ function operationTimeTest() {
 }
 
 function initTimeTest() {
-  let sumB1Time = 0;
-  let sumA1Time = 0;
-  let maxA1 = 0, minA1 = 0;
-  let maxB1 = 0, minB1 = 0;
   let tries = 1000;
   let nEntities = 1000000;
 
+  let sumA1Time = 0;
+  let maxA1 = 0, minA1 = 0;
   for (let t = 0; t < tries; ++t) {
     let a1 = [];
 
@@ -130,6 +165,9 @@ function initTimeTest() {
 
     sumA1Time += endTime;
   }
+
+  let sumB1Time = 0;
+  let maxB1 = 0, minB1 = 0;
   for (let t = 0; t < tries; ++t) {
     let b1 = new VectorSOA([], []);
 
@@ -153,9 +191,37 @@ function initTimeTest() {
     sumB1Time += endTime;
   }
 
+  let sumC1Time = 0;
+  let maxC1 = 0, minC1 = 0;
+  for (let t = 0; t < tries; ++t) {
+    let c1 =
+        new VectorSOA(new Uint32Array(nEntities), new Uint32Array(nEntities));
+
+    let start = getTime();
+    for (let i = 0; i < nEntities; ++i) {
+      c1.xs[i] = i + 1;
+    }
+
+    for (let i = 0; i < nEntities; ++i) {
+      c1.ys[i] = i * (i / 2);
+    }
+    let endTime = getTime() - start;
+
+    if (endTime < minC1) {
+      minC1 = endTime
+    } else if (t === 0) {
+      minC1 = endTime
+    }
+    if (endTime > maxC1) maxC1 = endTime;
+
+    sumC1Time += endTime;
+  }
+
   printDescriptors('A1: AOS', minA1, maxA1, sumA1Time / tries, sumA1Time)
 
   printDescriptors('B1: SOA', minB1, maxB1, sumB1Time / tries, sumB1Time)
+
+  printDescriptors('C1: typed SOA', minC1, maxC1, sumC1Time / tries, sumC1Time)
 
   let denom = sumA1Time <= sumB1Time ? sumA1Time : sumB1Time
   let nominator = sumA1Time >= sumB1Time ? sumA1Time : sumB1Time
